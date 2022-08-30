@@ -1,12 +1,14 @@
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as effect
 from   mplsoccer import VerticalPitch
+
 
 
 ##### FUNCTION DEFINITIONS #####
 
-def draw_divided_pitch(ax , grids = False):
+def drawDividedPitch(ax , grids = False):
     '''
     This function returns a vertical football pitch
     divided in specific locations.
@@ -22,8 +24,8 @@ def draw_divided_pitch(ax , grids = False):
     pitch = VerticalPitch(
         pitch_type = "opta",
         half = True,
-        label = True,
-        tick = True,
+        label = False,
+        tick = False,
         goal_type='box',
         linewidth = 1.25,
         line_color = 'black'
@@ -36,13 +38,12 @@ def draw_divided_pitch(ax , grids = False):
         x_lines = [100 - 20 * x for x in range(1,10)]
 
         for i in x_lines:
-            ax.plot(
-                [i, i], [0, 100], 
-                color = "lightgray", 
-                ls = "--",
-                lw = 1,
-                zorder = -1
-            )
+            ax.plot (
+                      [i, i], [0, 100], 
+                      color = "lightgray", 
+                      ls = "--",
+                      lw = 1,
+                      zorder = -1)
         for j in y_lines:
             ax.plot(
                 [100, 0], [j, j],
@@ -53,6 +54,8 @@ def draw_divided_pitch(ax , grids = False):
             )
 
     return ax
+
+
 
 ##### OPEN JSONs FILES #####
 
@@ -96,7 +99,8 @@ for match in matches:
         gameDict.update({match['wyId'] : match['label']})
 
 
-##### GET ALL CONCEDED GOALS EVENT #####
+
+##### GET COORDINATES OF THE GOALS CONCEDED BY KAMARA AND OUKIDJA #####
 
 concededGoalTotal    = 0
 concededGoalKamara   = 0
@@ -109,7 +113,6 @@ shotYList            = []
 
 # For each match playe by RCSA
 for matchId, matchName in gameDict.items():
-    # print('Match ID = ', matchName)
     # For each event in the data set
     for event in events:
         # If the event corresponds to a match played by RCSA 
@@ -126,7 +129,6 @@ for matchId, matchName in gameDict.items():
                    shotY = event['positions'][0].get('y')
                    shotCoord = [shotX, shotY]
                    concededGoalTotal = concededGoalTotal + 1
-                   # print("Goal scored from " + str(shotCoord))
             # Else if the event is an own goal conceded by RCSA
             elif tag == 102 and teamId == strasbourgId:
                 concededOwnGoal = concededOwnGoal + 1
@@ -140,14 +142,12 @@ for matchId, matchName in gameDict.items():
                     whoConcededList.append("Oukidja")
                     shotXList.append(shotX)
                     shotYList.append(shotY)
-                    # print('Conceded by Oukidja')
                 # Count goals conceded by Kamara
                 elif (event['playerId'] == kamaraId):
                     concededGoalKamara = concededGoalKamara + 1
                     whoConcededList.append("Kamara")
                     shotXList.append(shotX)
                     shotYList.append(shotY)
-                    # print('Conceded by Kamara')
 
 # print("Goal conceded by Strasbourg : " + str(concededGoalTotal))
 # print("Goal conceded by Oukidja : "    + str(concededGoalOukidja))
@@ -155,25 +155,173 @@ for matchId, matchName in gameDict.items():
 # print("Goal conceded by Bonnefoi : "   + str(concededGoalBonnefoi))
 # print("Own goal conceded : "           + str(concededOwnGoal))      
 
-df = pd.DataFrame({"Conceded by": whoConcededList,
-                   "x": shotXList,
-                   "y": shotYList})
+##### PUT CONCEDED GOAL DATA IN A DATA FRAME #####
 
-print(df)
+dfAllData = pd.DataFrame({"Conceded by": whoConcededList,
+                          "x": shotXList,
+                          "y": shotYList})
 
-##### DRAW THE PITCH #####
+
+
+##### FIGURE TEMPLATE #####
+layout = [["logo" + "picture" + "pitch" * 3],
+          ["text" * 2 + "pitch" * 3],
+          ["text" * 2 + "pitch" * 3]]
+
+
+fig = plt.figure(figsize = (5,5))
+
+ax_dict = fig.subplot_mosaic(layout)
+
+# ax_dict["logo"].annotate(
+#     xy = (.5,.5),
+#     text = "logo",
+#     ha = "center",
+#     va = "center",
+#     size = 20)
+
+# ax_dict["text"].annotate(
+#     xy = (.5,.5),
+#     text = "text",
+#     ha = "center",
+#     va = "center",
+#     size = 20)
+
+# ax_dict["picture"].annotate(
+#     xy = (.5,.5),
+#     text = "picture",
+#     ha = "center",
+#     va = "center",
+#     size = 20)
+
+# ax_dict["pitch"].annotate(
+#     xy = (.5,.5),
+#     text = "pitch",
+#     ha = "center",
+#     va = "center",
+#     size = 20)
+
+
+
+##### DRAW THE PITCHES #####
 
 # Create the figure and set the dimensions
-fig = plt.figure(figsize = (4,4), dpi = 100)
-ax = plt.subplot(111)
+figKamara = plt.figure(figsize = (4,4), dpi = 600)
+axKamara = plt.subplot(111)
 
-draw_divided_pitch(ax, grids = True)
-    
+figOukidja = plt.figure(figsize = (4,4), dpi = 600)
+axOukidja = plt.subplot(111)
 
-    
-
-
-
-
+# Draw the actual pitch with divisons
+drawDividedPitch(axKamara, grids = True)
+drawDividedPitch(axOukidja, grids = True)
 
 
+##### CREATE DATA BINS #####
+
+# Invert x and y coordinate to match vertical pitch
+dfAllData.rename(columns = {"x":"y", "y":"x"}, inplace = True)
+
+# Create and sort data bins
+x_bins = [0 + 20 * x for x in range(0,6)]
+y_bins = [50 + 10 * x for x in range(0,6)]
+
+x_bins.sort()
+y_bins.sort()
+
+# Add bins to the data frame
+dfAllData["bins_x"] = pd.cut(dfAllData["x"], bins = x_bins)
+dfAllData["bins_y"] = pd.cut(dfAllData["y"], bins = y_bins)
+
+
+
+##### EXTRACT KAMARA's DATA #####
+
+dfKamaraData = dfAllData[dfAllData["Conceded by"] == "Kamara"]
+
+dfKamaraData =  (dfKamaraData
+                     .sort_values(by = ["bins_y", "bins_x"])
+                     .reset_index(drop = True))
+
+dfKamaraZones = pd.DataFrame(dfKamaraData[['bins_x', 'bins_y']]
+                                 .value_counts()).reset_index()
+
+dfKamaraZones.columns = ['zoneX', 'zoneY', 'occurence']
+
+dfKamaraZones = (dfKamaraZones
+                    .assign(occurenceShare = lambda x : x.occurence/concededGoalKamara))
+
+dfKamaraZones = (dfKamaraZones
+                    .assign(occurenceScale = lambda x : x.occurenceShare/x.occurenceShare.max()))
+
+counter = 0
+for X, Y in zip(dfKamaraZones["zoneX"], dfKamaraZones["zoneY"]):
+    # Fill zones with color gradient
+    axKamara.fill_between(
+        x = [X.left, X.right],
+        y1 = Y.left,
+        y2 = Y.right,
+        color = "#38A1E4",
+        alpha = dfKamaraZones["occurenceScale"].iloc[counter],
+        zorder = -1,
+        lw = 0)
+    # Add percentage values as text in zones
+    if dfKamaraZones['occurenceShare'].iloc[counter] > .02:
+            text_ = axKamara.annotate(
+                    xy = (X.right - (X.right - X.left)/2, Y.right - (Y.right - Y.left)/2),
+                    text = f"{dfKamaraZones['occurenceShare'].iloc[counter]:.0%}",
+                    ha = "center",
+                    va = "center",
+                    color = "black",
+                    size = 5.5,
+                    weight = "bold",
+                    zorder = 3)
+            text_.set_path_effects([effect.Stroke(linewidth=1.5, foreground="white"), effect.Normal()])
+    counter += 1
+
+
+
+#### EXTRACT OUKIDJA's DATA #####
+
+dfOukidjaData = dfAllData[dfAllData["Conceded by"] == "Oukidja"]
+
+dfOukidjaData = (dfOukidjaData
+                     .sort_values(by = ["bins_y", "bins_x"])
+                     .reset_index(drop = True))
+
+dfOukidjaZones = pd.DataFrame(dfOukidjaData[['bins_x', 'bins_y']]
+                                  .value_counts()).reset_index()
+
+dfOukidjaZones.columns = ['zoneX', 'zoneY', 'occurence']
+
+dfOukidjaZones = (dfOukidjaZones
+                    .assign(occurenceShare = lambda x : x.occurence/concededGoalOukidja))
+
+dfOukidjaZones = (dfOukidjaZones
+                    .assign(occurenceScale = lambda x : x.occurenceShare/x.occurenceShare.max()))
+
+counter = 0
+
+for X, Y in zip(dfOukidjaZones["zoneX"], dfOukidjaZones["zoneY"]):
+    # Fill zones with color gradient
+    axOukidja.fill_between(
+        x = [X.left, X.right],
+        y1 = Y.left,
+        y2 = Y.right,
+        color = "#38A1E4",
+        alpha = dfOukidjaZones["occurenceScale"].iloc[counter],
+        zorder = -1,
+        lw = 0)
+    # Add percentage values as text in zones
+    if dfOukidjaZones['occurenceShare'].iloc[counter] > .02:
+        text_ = axOukidja.annotate(
+                xy = (X.right - (X.right - X.left)/2, Y.right - (Y.right - Y.left)/2),
+                text = f"{dfOukidjaZones['occurenceShare'].iloc[counter]:.0%}",
+                ha = "center",
+                va = "center",
+                color = "black",
+                size = 5.5,
+                weight = "bold",
+                zorder = 3)
+        text_.set_path_effects([effect.Stroke(linewidth=1.5, foreground="white"), effect.Normal()])
+    counter += 1
