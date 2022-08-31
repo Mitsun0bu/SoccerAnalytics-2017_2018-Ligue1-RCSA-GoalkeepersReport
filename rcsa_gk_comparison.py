@@ -27,7 +27,7 @@ def drawDividedPitch(ax , grids = False):
         label = False,
         tick = False,
         goal_type='box',
-        linewidth = 1.25,
+        linewidth = 3,
         line_color = 'black'
     )
     pitch.draw(ax = ax)
@@ -42,14 +42,14 @@ def drawDividedPitch(ax , grids = False):
                       [i, i], [0, 100], 
                       color = "lightgray", 
                       ls = "--",
-                      lw = 1,
+                      lw = 2,
                       zorder = -1)
         for j in y_lines:
             ax.plot(
                 [100, 0], [j, j],
                 color = "lightgray", 
                 ls = "--",
-                lw = 1,
+                lw = 2,
                 zorder = -1
             )
 
@@ -148,12 +148,8 @@ for matchId, matchName in gameDict.items():
                     whoConcededList.append("Kamara")
                     shotXList.append(shotX)
                     shotYList.append(shotY)
+     
 
-# print("Goal conceded by Strasbourg : " + str(concededGoalTotal))
-# print("Goal conceded by Oukidja : "    + str(concededGoalOukidja))
-# print("Goal conceded by Kamara : "     + str(concededGoalKamara))  
-# print("Goal conceded by Bonnefoi : "   + str(concededGoalBonnefoi))
-# print("Own goal conceded : "           + str(concededOwnGoal))      
 
 ##### PUT CONCEDED GOAL DATA IN A DATA FRAME #####
 
@@ -163,58 +159,19 @@ dfAllData = pd.DataFrame({"Conceded by": whoConcededList,
 
 
 
-##### FIGURE TEMPLATE #####
-layout = [["logo" + "picture" + "pitch" * 3],
-          ["text" * 2 + "pitch" * 3],
-          ["text" * 2 + "pitch" * 3]]
-
-
-fig = plt.figure(figsize = (5,5))
-
-ax_dict = fig.subplot_mosaic(layout)
-
-# ax_dict["logo"].annotate(
-#     xy = (.5,.5),
-#     text = "logo",
-#     ha = "center",
-#     va = "center",
-#     size = 20)
-
-# ax_dict["text"].annotate(
-#     xy = (.5,.5),
-#     text = "text",
-#     ha = "center",
-#     va = "center",
-#     size = 20)
-
-# ax_dict["picture"].annotate(
-#     xy = (.5,.5),
-#     text = "picture",
-#     ha = "center",
-#     va = "center",
-#     size = 20)
-
-# ax_dict["pitch"].annotate(
-#     xy = (.5,.5),
-#     text = "pitch",
-#     ha = "center",
-#     va = "center",
-#     size = 20)
-
-
-
 ##### DRAW THE PITCHES #####
 
 # Create the figure and set the dimensions
-figKamara = plt.figure(figsize = (4,4), dpi = 600)
+figKamara = plt.figure(figsize = (4,4), dpi = 800)
 axKamara = plt.subplot(111)
 
-figOukidja = plt.figure(figsize = (4,4), dpi = 600)
+figOukidja = plt.figure(figsize = (4,4), dpi = 800)
 axOukidja = plt.subplot(111)
 
 # Draw the actual pitch with divisons
 drawDividedPitch(axKamara, grids = True)
 drawDividedPitch(axOukidja, grids = True)
+
 
 
 ##### CREATE DATA BINS #####
@@ -325,3 +282,13 @@ for X, Y in zip(dfOukidjaZones["zoneX"], dfOukidjaZones["zoneY"]):
                 zorder = 3)
         text_.set_path_effects([effect.Stroke(linewidth=1.5, foreground="white"), effect.Normal()])
     counter += 1
+
+
+figKamara.set_size_inches(8, 8)
+figKamara.savefig('output/Kamara.png', dpi = 800, transparent=True)
+figOukidja.set_size_inches(8, 8)
+figOukidja.savefig('output/Oukidja.png', dpi = 800, transparent=True)
+    
+    
+    
+    
