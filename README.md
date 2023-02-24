@@ -1,4 +1,4 @@
-# rcsa_gk_comparison_2017-2018
+# 2017_2018-Ligue1-RCSA-GoalkeepersReport
 
 The data used for this work can be found here : 
 
